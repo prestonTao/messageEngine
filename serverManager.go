@@ -15,12 +15,12 @@ var (
 )
 
 type ServerManager struct {
-	isRun       bool //服务器是否开启
-	net         *Net
-	receive     <-chan *GetPacket
-	controller  Controller
-	auth        Auth
-	interceptor *interceptor
+	isRun      bool //服务器是否开启
+	net        *Net
+	receive    <-chan *GetPacket
+	controller Controller
+	auth       Auth
+	// interceptor *interceptor
 }
 
 func (this *ServerManager) Run() {
@@ -52,7 +52,7 @@ func (this *ServerManager) AddClientConn(name, ip string, port int32) {
 }
 
 func (this *ServerManager) AddInterceptor(itpr Interceptor) {
-
+	addInterceptor(itpr)
 }
 
 //得到控制器
@@ -80,5 +80,25 @@ func (this *ServerManager) handler(msg *GetPacket) {
 		fmt.Println("该消息未注册，消息编号：", msg.MsgID)
 		return
 	}
+	this.handlerProcess(handler, msg)
+}
+
+func (this *ServerManager) handlerProcess(handler MsgHandler, msg *GetPacket) {
+	defer func() {
+		if err := recover(); err != nil {
+			e, ok := err.(error)
+			if ok {
+				fmt.Println(e.Error())
+			}
+		}
+	}()
+	itps := getInterceptors()
+	itpsLen := len(itps)
+	for i := 0; i < itpsLen; i++ {
+		itps[i].In(this.controller, *msg)
+	}
 	handler(this.controller, *msg)
+	for i := itpsLen - 1; i >= 0; i-- {
+		itps[i].Out(this.controller, *msg)
+	}
 }

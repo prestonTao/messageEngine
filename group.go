@@ -5,8 +5,8 @@ import (
 )
 
 type groupOne struct {
-	lock  *sync.RWMutex
-	group map[string]Session
+	lock     *sync.RWMutex
+	msgGroup map[string]Session
 }
 
 //
@@ -15,25 +15,47 @@ type msgGroupProvider struct {
 	groups map[string]*groupOne
 }
 
-//添加一个小组
-func addGroup(name string) {
-	group.lock.Lock()
-	defer group.lock.Unlock()
-	group.groups[name] = make(map[string]Session)
+//创建一个小组
+func createGroup(groupName string) {
+	msgGroup.lock.Lock()
+	defer msgGroup.lock.Unlock()
+	msgGroup.groups[groupName] = new(groupOne)
 }
 
-func removeGroup(name string) {
-	group.lock.Lock()
-	defer group.lock.Unlock()
-	delete(group.groups, name)
-}
-func addToGroup(groupName, name string, session Session) {
-
+//删除一个小组
+func removeGroup(groupName string) {
+	msgGroup.lock.Lock()
+	defer msgGroup.lock.Unlock()
+	delete(msgGroup.groups, groupName)
 }
 
-var group = new(msgGroupProvider)
+//将一个连接添加到组中
+func addToGroup(groupName, name string) {
+	groupTag, ok := msgGroup.groups[groupName]
+	if !ok {
+		createGroup(groupName)
+		groupTag, _ = msgGroup.groups[groupName]
+	}
+	session, ok := getSession(name)
+	if ok {
+		groupTag.msgGroup[name] = session
+	}
+}
+
+//检查一个name是否在某个组中
+func checkNameInGroup(groupName, name string) bool {
+	groupTag, ok := msgGroup.groups[groupName]
+	if ok {
+		if _, ok = groupTag.msgGroup[name]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+var msgGroup = new(msgGroupProvider)
 
 func init() {
-	group.lock = new(sync.RWMutex)
-	group.groups = make(map[string]*groupOne)
+	msgGroup.lock = new(sync.RWMutex)
+	msgGroup.groups = make(map[string]*groupOne)
 }
