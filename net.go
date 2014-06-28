@@ -8,7 +8,8 @@ import (
 )
 
 type Net struct {
-	Recv chan *GetPacket //获得数据
+	Recv         chan *GetPacket //获得数据
+	sessionStore *sessionStore
 }
 
 func (this *Net) start(ip string, port int32) {
@@ -25,7 +26,10 @@ func (this *Net) start(ip string, port int32) {
 	}
 
 	fmt.Println(ip + ":" + strconv.Itoa(int(port)) + "成功启动服务器")
+	go this.listener(listener)
+}
 
+func (this *Net) listener(listener net.Listener) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -68,7 +72,7 @@ func (this *Net) newConnect(conn net.Conn) {
 	// client.outData = make(chan *[]byte, 1000)
 	// client.inPack = this.Recv
 	// client.run()
-	addSession(name, serverConn)
+	this.sessionStore.addSession(name, serverConn)
 	// addConn(this.session, serverConn)
 
 	fmt.Println(time.Now().String(), "建立连接", conn.RemoteAddr().String())
@@ -83,9 +87,9 @@ func (this *Net) newConnect(conn net.Conn) {
 
 //关闭连接
 func (this *Net) CloseClient(name string) bool {
-	session, ok := getSession(name)
+	session, ok := this.sessionStore.getSession(name)
 	if ok {
-		removeSession(name)
+		this.sessionStore.removeSession(name)
 		session.Close()
 		return true
 	}
@@ -107,7 +111,10 @@ func (this *Net) AddClientConn(name, ip string, port int32) *Client {
 	}
 	clientConn.name = name
 	clientConn.attrbutes = make(map[string]interface{})
-	clientConn.Connect(ip, port)
+	err := clientConn.Connect(ip, port)
+	if err != nil {
+		this.sessionStore.addSession(this.name, this)
+	}
 
 	// client := new(Client)
 	// client.Session = this.session
@@ -121,7 +128,7 @@ func (this *Net) AddClientConn(name, ip string, port int32) *Client {
 }
 
 func (this *Net) GetSession(name string) (Session, bool) {
-	return getSession(name)
+	return this.sessionStore.getSession(name)
 	// client, err := getConn(session)
 	// if err != nil {
 	// 	return nil
@@ -131,7 +138,7 @@ func (this *Net) GetSession(name string) (Session, bool) {
 
 //发送数据
 func (this *Net) Send(name string, msgID uint32, data []byte) bool {
-	session, ok := getSession(name)
+	session, ok := this.sessionStore.getSession(name)
 	if ok {
 		session.Send(msgID, &data)
 		return true
@@ -153,7 +160,7 @@ func NewNet(ip string, port int32, auth Auth) *Net {
 		defaultAuth = auth
 	}
 	net.Recv = make(chan *GetPacket, 5000)
-	go net.start(ip, port)
+	net.start(ip, port)
 	// time.Sleep(time.Millisecond * 3)
 	return net
 }

@@ -20,7 +20,6 @@ type ServerManager struct {
 	receive    <-chan *GetPacket
 	controller Controller
 	auth       Auth
-	// interceptor *interceptor
 }
 
 func (this *ServerManager) Run() {
@@ -42,15 +41,18 @@ func (this *ServerManager) buildController() {
 	c.net = this.net
 	c.serverManager = this
 	c.attributes = make(map[string]interface{})
+	c.msgGroup = NewMsgGroupManager()
 	this.controller = c
 }
 
+//添加一个连接，给这个连接取一个名字
 func (this *ServerManager) AddClientConn(name, ip string, port int32) {
 	this.Run()
 	this.net.AddClientConn(name, ip, port)
 	// addAcc(name, client.Session)
 }
 
+//添加一个拦截器，所有消息到达业务方法之前都要经过拦截器处理
 func (this *ServerManager) AddInterceptor(itpr Interceptor) {
 	addInterceptor(itpr)
 }
@@ -62,10 +64,6 @@ func (this *ServerManager) GetController() Controller {
 
 //读取网络模块发送来的消息
 func (this *ServerManager) read() {
-	// for this.isRun {
-	// 	msg := <-this.receive
-	// 	this.handler(msg)
-	// }
 	//保证将消息处理完才关闭服务器
 	for msg := range this.receive {
 		this.handler(msg)
@@ -80,6 +78,7 @@ func (this *ServerManager) handler(msg *GetPacket) {
 		fmt.Println("该消息未注册，消息编号：", msg.MsgID)
 		return
 	}
+	//这里决定了消息是否异步处理
 	this.handlerProcess(handler, msg)
 }
 

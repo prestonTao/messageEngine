@@ -29,6 +29,7 @@ type ControllerImpl struct {
 	net           *Net
 	serverManager *ServerManager
 	attributes    map[string]interface{}
+	msgGroup      MsgGroup
 	// Client     *Client
 }
 

@@ -35,35 +35,41 @@ type Session interface {
 	SetName(name string)
 }
 
-type sessionProvider struct {
+type sessionStore struct {
 	lock *sync.RWMutex
 	// store     map[int64]Session
 	nameStore map[string]Session
 }
 
-func addSession(name string, session Session) {
-	sessionStore.lock.Lock()
-	defer sessionStore.lock.Unlock()
-	sessionStore.nameStore[session.GetName()] = session
+func (this *sessionStore) addSession(name string, session Session) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	this.nameStore[session.GetName()] = session
 	// sessionStore.store[sessionId] = session
 }
 
-func getSession(name string) (Session, bool) {
-	sessionStore.lock.Lock()
-	defer sessionStore.lock.Unlock()
-	s, ok := sessionStore.nameStore[name]
+func (this *sessionStore) getSession(name string) (Session, bool) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	s, ok := this.nameStore[name]
 	return s, ok
 }
 
-func removeSession(name string) {
-	sessionStore.lock.Lock()
-	defer sessionStore.lock.Unlock()
-	delete(sessionStore.nameStore, name)
+func (this *sessionStore) removeSession(name string) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	delete(this.nameStore, name)
 }
 
-var sessionStore = new(sessionProvider)
-
-func init() {
+func NewSessionStore() *sessionStore {
+	sessionStore = new(sessionStore)
 	sessionStore.lock = new(sync.RWMutex)
-	sessionStore.nameStore = make(map[string]Session, 10000)
+	sessionStore.nameStore = make(map[string]Session)
 }
+
+// var sessionStore = new(sessionStore)
+
+// func init() {
+// 	sessionStore.lock = new(sync.RWMutex)
+// 	sessionStore.nameStore = make(map[string]Session, 10000)
+// }

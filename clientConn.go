@@ -31,7 +31,6 @@ func (this *Client) Connect(ip string, port int32) error {
 	var err error
 	this.conn, err = net.Dial("tcp", ip+":"+strconv.Itoa(int(port)))
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -41,7 +40,6 @@ func (this *Client) Connect(ip string, port int32) error {
 		return err
 
 	}
-	addSession(this.name, this)
 
 	fmt.Println("Connecting to", ip)
 
