@@ -19,17 +19,17 @@ type Controller interface {
 	// GetClientById(session uint64) Conn           //得到本机到其他计算机的连接
 	// GetDatabaseId(accName string) (int, int)     //获得数据库分库分表的id
 	// Forward()                                    //服务器跳转
-
+	GetGroupManager() MsgGroup //获得消息组管理器
 }
 
 type ControllerImpl struct {
 	// lock       sync.RWMutex
 	// Config     *ConfigFile
 	// ConnStore  map[int32]mysql.Conn
-	net           *Net
-	serverManager *ServerManager
-	attributes    map[string]interface{}
-	msgGroup      MsgGroup
+	net        *Net
+	engine     *Engine
+	attributes map[string]interface{}
+	msgGroup   *msgGroupManager
 	// Client     *Client
 }
 
@@ -108,3 +108,6 @@ func (this *ControllerImpl) GetSession(name string) (Session, bool) {
 // 	Tbid := int(accName[len(accName)-1]) % message.PLAYER_DATABASE_COUNT
 // 	return Dbid, Tbid
 // }
+func (this *ControllerImpl) GetGroupManager() MsgGroup {
+	return this.msgGroup
+}

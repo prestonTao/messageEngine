@@ -20,24 +20,31 @@ type InterceptorProvider struct {
 	interceptors []Interceptor
 }
 
-func addInterceptor(itpr Interceptor) {
-	interceptors.lock.Lock()
-	defer interceptors.lock.Unlock()
-	interceptors.interceptors = append(interceptors.interceptors, itpr)
+func (this *InterceptorProvider) addInterceptor(itpr Interceptor) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	this.interceptors = append(this.interceptors, itpr)
 }
-func getInterceptors() []Interceptor {
-	interceptors.lock.Lock()
-	defer interceptors.lock.Unlock()
-	return interceptors.interceptors
+func (this *InterceptorProvider) getInterceptors() []Interceptor {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	return this.interceptors
 
 }
 
-var interceptors *InterceptorProvider
-
-func init() {
-	interceptors = new(InterceptorProvider)
-	interceptors.lock = new(sync.RWMutex)
-	interceptors.interceptors = make([]Interceptor, 0)
+func NewInterceptor() *InterceptorProvider {
+	interceptor := new(InterceptorProvider)
+	interceptor.lock = new(sync.RWMutex)
+	interceptor.interceptors = make([]Interceptor, 0)
+	return interceptor
 }
+
+// var interceptors *InterceptorProvider
+
+// func init() {
+// 	interceptors = new(InterceptorProvider)
+// 	interceptors.lock = new(sync.RWMutex)
+// 	interceptors.interceptors = make([]Interceptor, 0)
+// }
 
 // var chanS =

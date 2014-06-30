@@ -50,7 +50,7 @@ func (this *Client) Connect(ip string, port int32) error {
 
 	go this.recv()
 	go this.send()
-	return err
+	return nil
 }
 func (this *Client) reConnect() {
 	for {
@@ -76,8 +76,8 @@ func (this *Client) reConnect() {
 }
 
 func (this *Client) recv() {
-	for !this.isClose {
 
+	for !this.isClose {
 		header := make([]byte, 12)
 
 		n, err := io.ReadFull(this.conn, header)
@@ -151,18 +151,21 @@ func (this *Client) send() {
 	// 		}
 	// 	}
 	// }
-
 	for msg := range this.outData {
+		fmt.Println(msg)
 		if _, err := this.conn.Write(*msg); err != nil {
 			log.Println("发送数据出错", err)
 			return
 		}
+		fmt.Println("发送成功")
 	}
 }
 
 //发送序列化后的数据
 func (this *Client) Send(msgID uint32, data *[]byte) {
+	fmt.Println(msgID, *data)
 	buff := PacketData(msgID, data)
+	fmt.Println(buff)
 	this.outData <- buff
 }
 

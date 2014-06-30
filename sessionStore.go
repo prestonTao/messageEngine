@@ -62,9 +62,10 @@ func (this *sessionStore) removeSession(name string) {
 }
 
 func NewSessionStore() *sessionStore {
-	sessionStore = new(sessionStore)
+	sessionStore := new(sessionStore)
 	sessionStore.lock = new(sync.RWMutex)
 	sessionStore.nameStore = make(map[string]Session)
+	return sessionStore
 }
 
 // var sessionStore = new(sessionStore)

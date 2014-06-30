@@ -12,7 +12,7 @@ type Net struct {
 	sessionStore *sessionStore
 }
 
-func (this *Net) start(ip string, port int32) {
+func (this *Net) Listen(ip string, port int32) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", ip+":"+strconv.Itoa(int(port)))
 	if err != nil {
 		fmt.Println(err)
@@ -24,8 +24,8 @@ func (this *Net) start(ip string, port int32) {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Println(ip + ":" + strconv.Itoa(int(port)) + "成功启动服务器")
+	fmt.Println("监听一个地址：", ip+":"+strconv.Itoa(int(port)))
+	// fmt.Println(ip + ":" + strconv.Itoa(int(port)) + "成功启动服务器")
 	go this.listener(listener)
 }
 
@@ -96,7 +96,7 @@ func (this *Net) CloseClient(name string) bool {
 	return false
 }
 
-func (this *Net) AddClientConn(name, ip string, port int32) *Client {
+func (this *Net) AddClientConn(name, ip string, port int32) (*Client, error) {
 	// this.lock.Lock()
 	// defer this.lock.Unlock()
 	//-------------------
@@ -112,28 +112,15 @@ func (this *Net) AddClientConn(name, ip string, port int32) *Client {
 	clientConn.name = name
 	clientConn.attrbutes = make(map[string]interface{})
 	err := clientConn.Connect(ip, port)
-	if err != nil {
-		this.sessionStore.addSession(this.name, this)
+	if err == nil {
+		this.sessionStore.addSession(name, clientConn)
+		return clientConn, nil
 	}
-
-	// client := new(Client)
-	// client.Session = this.session
-	// client.inPack = this.Recv
-	// client.outData = make(chan *[]byte, 2000)
-	// client.Connect(ip, port)
-
-	// addConn(this.session, clientConn)
-
-	return clientConn
+	return nil, err
 }
 
 func (this *Net) GetSession(name string) (Session, bool) {
 	return this.sessionStore.getSession(name)
-	// client, err := getConn(session)
-	// if err != nil {
-	// 	return nil
-	// }
-	// return client
 }
 
 //发送数据
@@ -145,22 +132,14 @@ func (this *Net) Send(name string, msgID uint32, data []byte) bool {
 	} else {
 		return false
 	}
-	// client, err := getConn(connId)
-	// if err != nil {
-	// 	return err
-	// }
-	// client.Send(msgID, &data)
-	// return nil
 }
 
-func NewNet(ip string, port int32, auth Auth) *Net {
+func NewNet() *Net {
 
 	net := new(Net)
-	if auth != nil {
-		defaultAuth = auth
-	}
+	net.sessionStore = NewSessionStore()
 	net.Recv = make(chan *GetPacket, 5000)
-	net.start(ip, port)
+	// net.start(ip, port)
 	// time.Sleep(time.Millisecond * 3)
 	return net
 }

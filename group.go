@@ -18,8 +18,9 @@ type groupOne struct {
 
 //
 type msgGroupManager struct {
-	lock   *sync.RWMutex
-	groups map[string]*groupOne
+	lock       *sync.RWMutex
+	groups     map[string]*groupOne
+	controller Controller
 }
 
 //创建一个小组
@@ -43,7 +44,7 @@ func (this *msgGroupManager) AddToGroup(groupName, name string) {
 		this.createGroup(groupName)
 		groupTag, _ = this.groups[groupName]
 	}
-	session, ok := getSession(name)
+	session, ok := this.controller.GetSession(name)
 	if ok {
 		groupTag.msgGroup[name] = session
 	}

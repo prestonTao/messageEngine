@@ -37,7 +37,7 @@ func (this *ServerConn) recv() {
 	for !this.isClose {
 		var data []byte
 		header := make([]byte, 12)
-
+		fmt.Println("服务器等待接收数据")
 		n, err := io.ReadFull(this.conn, header)
 		if n == 0 && err == io.EOF {
 			// temp := new(GetPacket)
@@ -51,11 +51,11 @@ func (this *ServerConn) recv() {
 			return
 		}
 		//数据包长度
-
+		fmt.Println("服务器验证数据长度")
 		size := binary.BigEndian.Uint32(header)
 		//crc值
 		crc1 := binary.BigEndian.Uint32(header[4:8])
-		// msgID := binary.BigEndian.Uint32(header[8:12])
+		msgID := binary.BigEndian.Uint32(header[8:12])
 
 		data = make([]byte, size)
 		n, err = io.ReadFull(this.conn, data)
@@ -73,13 +73,13 @@ func (this *ServerConn) recv() {
 			log.Println("crc 数据验证不正确: ", crc1, " != ", crc2)
 			return
 		}
-
-		// temp := new(GetPacket)
-		// temp.ConnId = this.session
-		// temp.Date = data
-		// temp.MsgID = int32(msgID)
-		// temp.Size = uint32(len(data))
-		// this.inPack <- temp
+		// fmt.Println()
+		temp := new(GetPacket)
+		temp.Name = this.GetName()
+		temp.Date = data
+		temp.MsgID = int32(msgID)
+		temp.Size = uint32(len(data))
+		this.inPack <- temp
 	}
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理

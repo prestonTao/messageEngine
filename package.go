@@ -6,14 +6,11 @@ import (
 	"hash/crc32"
 )
 
-var Connect int8 = 1
-var Close int8 = 2
-
 type GetPacket struct {
-	ConnId uint64
-	Size   uint32
-	MsgID  int32
-	Date   []byte
+	Name  string
+	MsgID int32
+	Size  uint32
+	Date  []byte
 }
 
 func PacketData(msgID uint32, data *[]byte) *[]byte {
