@@ -78,7 +78,6 @@ func (this *Engine) buildController() {
 func (this *Engine) read() {
 	//保证将消息处理完才关闭服务器
 	for msg := range this.receive {
-		fmt.Println("haha")
 		this.handler(msg)
 	}
 }

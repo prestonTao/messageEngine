@@ -152,32 +152,28 @@ func (this *Client) send() {
 	// 	}
 	// }
 	for msg := range this.outData {
-		fmt.Println(msg)
 		if _, err := this.conn.Write(*msg); err != nil {
 			log.Println("发送数据出错", err)
 			return
 		}
-		fmt.Println("发送成功")
 	}
 }
 
 //发送序列化后的数据
 func (this *Client) Send(msgID uint32, data *[]byte) {
-	fmt.Println(msgID, *data)
-	buff := PacketData(msgID, data)
-	fmt.Println(buff)
+	buff := MarshalPacket(msgID, data)
 	this.outData <- buff
 }
 
-func (this *Client) GetOneMsg() {
+// func (this *Client) GetOneMsg() {
 
-}
+// }
 
-//发送
-func (this *Client) SendBytes(msgID uint32, data []byte) {
-	buff := PacketData(msgID, &data)
-	this.outData <- buff
-}
+// //发送
+// func (this *Client) SendBytes(msgID uint32, data []byte) {
+// 	buff := MarshalPacket(msgID, &data)
+// 	this.outData <- buff
+// }
 
 //客户端关闭时,退出recv,send
 func (this *Client) Close() {
