@@ -85,7 +85,7 @@ func (this *Client) recv() {
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
 	close(this.outData)
-	fmt.Println("关闭连接")
+	// fmt.Println("关闭连接")
 }
 
 func (this *Client) send() {

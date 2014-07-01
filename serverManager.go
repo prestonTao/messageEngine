@@ -116,7 +116,11 @@ func (this *Engine) handlerProcess(handler MsgHandler, msg *GetPacket) {
 	itps := this.interceptor.getInterceptors()
 	itpsLen := len(itps)
 	for i := 0; i < itpsLen; i++ {
-		itps[i].In(this.controller, *msg)
+		isIntercept := itps[i].In(this.controller, *msg)
+		//
+		if isIntercept {
+			return
+		}
 	}
 	handler(this.controller, *msg)
 	//消息处理后也要通过拦截器

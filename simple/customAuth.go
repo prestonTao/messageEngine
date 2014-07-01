@@ -23,6 +23,7 @@ func main() {
 func server() {
 	engine := msgE.NewEngine("interServer")
 	engine.RegisterMsg(111, RecvMsg)
+	//设置自定义权限验证
 	engine.SetAuth(new(CustomAuth))
 	engine.Listen("127.0.0.1", 9090)
 	time.Sleep(time.Second * 10)
@@ -42,6 +43,7 @@ func RecvMsg(c msgE.Controller, msg msgE.GetPacket) {
 func client() {
 	engine := msgE.NewEngine("interClient")
 	engine.RegisterMsg(111, RecvMsg)
+	//设置自定义权限验证
 	engine.SetAuth(new(CustomAuth))
 	engine.AddClientConn("test", "127.0.0.1", 9090)
 
@@ -62,7 +64,6 @@ type CustomAuth struct {
 
 //发送
 func (this *CustomAuth) SendKey(conn net.Conn, session msgE.Session, name string) (err error) {
-	// name := session.GetName()
 
 	lenght := int32(len(name))
 	buf := bytes.NewBuffer([]byte{})

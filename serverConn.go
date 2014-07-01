@@ -47,7 +47,7 @@ func (this *ServerConn) recv() {
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
 	close(this.outData)
-	fmt.Println("关闭连接")
+	// fmt.Println("关闭连接")
 }
 
 //发送给客户端消息协程
@@ -79,6 +79,6 @@ func (this *ServerConn) Send(msgID uint32, data *[]byte) {
 
 //关闭这个连接
 func (this *ServerConn) Close() {
-	fmt.Println("调用关闭连接方法")
+	// fmt.Println("调用关闭连接方法")
 	this.isClose = true
 }
