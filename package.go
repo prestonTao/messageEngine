@@ -86,19 +86,4 @@ func MarshalPacket(msgID uint32, data *[]byte) *[]byte {
 	bs := buf.Bytes()
 
 	return &bs
-
-	// writer := packet.Writer()
-	// //size uint32
-	// writer.WriteU32(uint32(len(*data)))
-	// //crc32 uint32
-	// crc32 := crc32.Checksum(*data, crc32.IEEETable)
-	// writer.WriteU32(crc32)
-
-	// //msgID
-	// writer.WriteU32(msgID)
-	// //Data
-	// writer.WriteRawBytes(*data)
-	// bs := writer.Data()
-
-	// return &bs
 }

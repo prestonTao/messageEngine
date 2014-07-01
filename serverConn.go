@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	// "time"
 )
 
 //其他计算机对本机的连接
@@ -22,6 +23,7 @@ type ServerConn struct {
 func (this *ServerConn) run() {
 	go this.recv()
 	go this.send()
+	// go this.hold()
 }
 
 //接收客户端消息协程
@@ -33,6 +35,10 @@ func (this *ServerConn) recv() {
 			break
 		}
 		if err == nil {
+			if packet.MsgID == 0 {
+				//hold 心跳包
+				continue
+			}
 			packet.Name = this.GetName()
 			this.inPack <- packet
 			continue
@@ -42,6 +48,7 @@ func (this *ServerConn) recv() {
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
 	close(this.outData)
+	fmt.Println("关闭连接")
 }
 
 //发送给客户端消息协程
@@ -56,6 +63,15 @@ func (this *ServerConn) send() {
 	}
 }
 
+// //心跳连接
+// func (this *ServerConn) hold() {
+// 	for !this.isClose {
+// 		time.Sleep(time.Second * 5)
+// 		bs := []byte("")
+// 		this.Send(0, &bs)
+// 	}
+// }
+
 //给客户端发送数据
 func (this *ServerConn) Send(msgID uint32, data *[]byte) {
 	buff := MarshalPacket(msgID, data)
@@ -64,6 +80,6 @@ func (this *ServerConn) Send(msgID uint32, data *[]byte) {
 
 //关闭这个连接
 func (this *ServerConn) Close() {
+	fmt.Println("调用关闭连接方法")
 	this.isClose = true
-
 }

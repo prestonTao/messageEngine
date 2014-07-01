@@ -1,4 +1,4 @@
 messageEngine
 =============
 
-Game message engine for Golang library.
+Game server message engine for Golang library.

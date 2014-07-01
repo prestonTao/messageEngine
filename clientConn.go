@@ -1,10 +1,10 @@
 package messageEngine
 
 import (
-	"encoding/binary"
+	// "encoding/binary"
 	"fmt"
-	"hash/crc32"
-	"io"
+	// "hash/crc32"
+	// "io"
 	"log"
 	"net"
 	"strconv"
@@ -43,13 +43,9 @@ func (this *Client) Connect(ip string, port int32) error {
 
 	fmt.Println("Connecting to", ip)
 
-	// temp := new(GetPacket)
-	// temp.ConnId = this.Session
-	// temp.MsgID = int32(Connect)
-	// this.inPack <- temp
-
 	go this.recv()
 	go this.send()
+	go this.hold()
 	return nil
 }
 func (this *Client) reConnect() {
@@ -64,13 +60,9 @@ func (this *Client) reConnect() {
 
 		fmt.Println("Connecting to", this.ip)
 
-		// temp := new(GetPacket)
-		// temp.ConnId = this.Session
-		// temp.MsgID = int32(Connect)
-		// this.inPack <- temp
-
 		go this.recv()
 		go this.send()
+		go this.hold()
 		return
 	}
 }
@@ -78,84 +70,40 @@ func (this *Client) reConnect() {
 func (this *Client) recv() {
 
 	for !this.isClose {
-		header := make([]byte, 12)
 
-		n, err := io.ReadFull(this.conn, header)
-
-		if n == 0 && err == io.EOF {
-			fmt.Println("客户端断开连接")
-			go this.reConnect()
-			return
-		} else if err != nil {
-			fmt.Println("接受数据出错:", err)
-			go this.reConnect()
-			return
+		packet, err, isClose := RecvPackage(this.conn)
+		if isClose {
+			break
 		}
-
-		//数据包长度
-		size := binary.BigEndian.Uint32(header)
-		//crc值
-		crc1 := binary.BigEndian.Uint32(header[4:8])
-
-		// msgID := binary.BigEndian.Uint32(header[8:12])
-
-		data := make([]byte, size)
-
-		n, err = io.ReadFull(this.conn, data)
-		if err != nil {
-			log.Println("读取数据出错:", err)
-			go this.reConnect()
-			return
-		}
-		if uint32(n) != size {
-			log.Println("数据包长度不正确", n, "!=", size)
+		if err == nil {
+			packet.Name = this.GetName()
+			this.inPack <- packet
 			continue
 		}
-
-		crc2 := crc32.Checksum(data, crc32.IEEETable)
-
-		if crc1 != crc2 {
-			log.Println("crc 数据验证不正确: ", crc1, " != ", crc2)
-			continue
-		}
-
-		// temp := new(GetPacket)
-		// temp.ConnId = this.Session
-		// temp.Date = data
-		// temp.MsgID = int32(msgID)
-		// temp.Size = uint32(len(data))
-		// this.inPack <- temp
+		fmt.Println(err.Error())
 	}
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
 	close(this.outData)
+	fmt.Println("关闭连接")
 }
 
 func (this *Client) send() {
 	// //处理客户端主动断开连接的情况
-	// defer func(clientConn *Client) {
-	// 	log.Println("关闭此连接发送协程")
-	// 	this.conn.Close()
-	// 	close(this.outData)
-	// }(this)
-	// for {
-	// 	select {
-	// 	case msg := <-this.outData:
-	// 		if _, err := this.conn.Write(*msg); err != nil {
-	// 			log.Println("发送数据出错", err)
-	// 			return
-	// 		}
-	// 	default:
-	// 		if this.isClose {
-	// 			return
-	// 		}
-	// 	}
-	// }
 	for msg := range this.outData {
 		if _, err := this.conn.Write(*msg); err != nil {
 			log.Println("发送数据出错", err)
 			return
 		}
+	}
+}
+
+//心跳连接
+func (this *Client) hold() {
+	for !this.isClose {
+		time.Sleep(time.Second * 2)
+		bs := []byte("")
+		this.Send(0, &bs)
 	}
 }
 
@@ -177,6 +125,7 @@ func (this *Client) Send(msgID uint32, data *[]byte) {
 
 //客户端关闭时,退出recv,send
 func (this *Client) Close() {
+	fmt.Println("diaoyong guanbi lianjie fangfa")
 	this.isClose = true
 }
 func NewClient(name, ip string, port int32) *Client {
