@@ -8,7 +8,7 @@ import (
 var defaultAuth Auth = new(NoneAuth)
 
 type Auth interface {
-	SendKey(conn net.Conn, session Session) (err error)
+	SendKey(conn net.Conn, session Session, name string) (err error)
 	RecvKey(conn net.Conn) (name string, err error)
 }
 
@@ -17,7 +17,7 @@ type NoneAuth struct {
 }
 
 //发送
-func (this *NoneAuth) SendKey(conn net.Conn, session Session) (err error) {
+func (this *NoneAuth) SendKey(conn net.Conn, session Session, name string) (err error) {
 	return
 }
 

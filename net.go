@@ -96,7 +96,7 @@ func (this *Net) CloseClient(name string) bool {
 	return false
 }
 
-func (this *Net) AddClientConn(name, ip string, port int32) (*Client, error) {
+func (this *Net) AddClientConn(name, ip, serverName string, port int32) (*Client, error) {
 	// this.lock.Lock()
 	// defer this.lock.Unlock()
 	//-------------------
@@ -105,9 +105,9 @@ func (this *Net) AddClientConn(name, ip string, port int32) (*Client, error) {
 	// this.session++
 
 	clientConn := &Client{
-		// Session: this.session,
-		outData: make(chan *[]byte, 2000),
-		inPack:  this.Recv,
+		serverName: serverName,
+		outData:    make(chan *[]byte, 2000),
+		inPack:     this.Recv,
 	}
 	clientConn.name = name
 	clientConn.attrbutes = make(map[string]interface{})

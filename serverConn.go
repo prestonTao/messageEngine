@@ -10,8 +10,7 @@ import (
 //其他计算机对本机的连接
 type ServerConn struct {
 	sessionBase
-	conn net.Conn
-	// session        uint64
+	conn           net.Conn
 	Ip             string
 	Connected_time string
 	CloseTime      string

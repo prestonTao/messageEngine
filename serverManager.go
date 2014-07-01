@@ -44,7 +44,7 @@ func (this *Engine) Listen(ip string, port int32) {
 //添加一个连接，给这个连接取一个名字，连接名字可以在自定义权限验证方法里面修改
 func (this *Engine) AddClientConn(name, ip string, port int32) {
 	this.run()
-	this.net.AddClientConn(name, ip, port)
+	this.net.AddClientConn(name, ip, this.name, port)
 }
 
 //添加一个拦截器，所有消息到达业务方法之前都要经过拦截器处理

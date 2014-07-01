@@ -14,13 +14,13 @@ import (
 //本机向其他服务器的连接
 type Client struct {
 	sessionBase
-	// Session uint64
-	ip      string
-	port    int32
-	conn    net.Conn
-	outData chan *[]byte    //发送队列
-	inPack  chan *GetPacket //接收队列
-	isClose bool            //该连接是否被关闭
+	serverName string
+	ip         string
+	port       int32
+	conn       net.Conn
+	outData    chan *[]byte    //发送队列
+	inPack     chan *GetPacket //接收队列
+	isClose    bool            //该连接是否被关闭
 }
 
 func (this *Client) Connect(ip string, port int32) error {
@@ -35,7 +35,7 @@ func (this *Client) Connect(ip string, port int32) error {
 	}
 
 	//权限验证
-	err = defaultAuth.SendKey(this.conn, this)
+	err = defaultAuth.SendKey(this.conn, this, this.serverName)
 	if err != nil {
 		return err
 
@@ -125,7 +125,6 @@ func (this *Client) Send(msgID uint32, data *[]byte) {
 
 //客户端关闭时,退出recv,send
 func (this *Client) Close() {
-	fmt.Println("diaoyong guanbi lianjie fangfa")
 	this.isClose = true
 }
 func NewClient(name, ip string, port int32) *Client {
