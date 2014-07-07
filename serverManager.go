@@ -69,7 +69,7 @@ func (this *Engine) SetAuth(auth Auth) {
 
 func (this *Engine) run() {
 	//保证方法只执行一次
-	go this.onceRead.Do(func() {
+	this.onceRead.Do(func() {
 		this.receive = this.net.Recv
 		//构建控制器
 		this.buildController()

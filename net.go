@@ -57,8 +57,8 @@ func (this *Net) newConnect(conn net.Conn) {
 		// session:        this.session,
 		Ip:             conn.RemoteAddr().String(),
 		Connected_time: time.Now().String(),
-		outData:        make(chan *[]byte, 1000),
-		inPack:         this.Recv,
+		// outData:        make(chan *[]byte, 1000),
+		inPack: this.Recv,
 	}
 	serverConn.name = name
 	serverConn.attrbutes = make(map[string]interface{})
@@ -106,8 +106,9 @@ func (this *Net) AddClientConn(name, ip, serverName string, port int32) (*Client
 
 	clientConn := &Client{
 		serverName: serverName,
-		outData:    make(chan *[]byte, 2000),
-		inPack:     this.Recv,
+		// outData:    make(chan *[]byte, 2000),
+		inPack: this.Recv,
+		net:    this,
 	}
 	clientConn.name = name
 	clientConn.attrbutes = make(map[string]interface{})

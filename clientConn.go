@@ -5,7 +5,6 @@ import (
 	"fmt"
 	// "hash/crc32"
 	// "io"
-	"log"
 	"net"
 	"strconv"
 	"time"
@@ -18,9 +17,11 @@ type Client struct {
 	ip         string
 	port       int32
 	conn       net.Conn
-	outData    chan *[]byte    //发送队列
+	// outData    chan *[]byte    //发送队列
 	inPack     chan *GetPacket //接收队列
 	isClose    bool            //该连接是否被关闭
+	isPowerful bool            //是否是强连接，强连接有短线重连功能
+	net        *Net
 }
 
 func (this *Client) Connect(ip string, port int32) error {
@@ -43,7 +44,7 @@ func (this *Client) Connect(ip string, port int32) error {
 	fmt.Println("Connecting to", ip)
 
 	go this.recv()
-	go this.send()
+	// go this.send()
 	go this.hold()
 	return nil
 }
@@ -60,7 +61,7 @@ func (this *Client) reConnect() {
 		fmt.Println("Connecting to", this.ip)
 
 		go this.recv()
-		go this.send()
+		// go this.send()
 		go this.hold()
 		return
 	}
@@ -69,9 +70,9 @@ func (this *Client) reConnect() {
 func (this *Client) recv() {
 
 	for !this.isClose {
-
 		packet, err, isClose := RecvPackage(this.conn)
 		if isClose {
+			this.isClose = true
 			break
 		}
 		if err == nil {
@@ -84,35 +85,54 @@ func (this *Client) recv() {
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
 	// close(this.outData)
-	// fmt.Println("关闭连接")
+	// fmt.Println("recv 协成走完")
 }
 
-func (this *Client) send() {
-	defer func() {
-		close(this.outData)
-	}()
-	// //处理客户端主动断开连接的情况
-	for msg := range this.outData {
-		if _, err := this.conn.Write(*msg); err != nil {
-			log.Println("发送数据出错", err)
-			return
-		}
-	}
-}
+// func (this *Client) send() {
+// 	defer func() {
+// 		// close(this.outData)
+// 		this.isClose = true
+// 		// fmt.Println("send 协成走完")
+// 	}()
+// 	// //处理客户端主动断开连接的情况
+// 	for msg := range this.outData {
+// 		if _, err := this.conn.Write(*msg); err != nil {
+// 			log.Println("发送数据出错", err)
+// 			return
+// 		}
+// 	}
+
+// }
 
 //心跳连接
 func (this *Client) hold() {
 	for !this.isClose {
+		// fmt.Println("hold")
 		time.Sleep(time.Second * 2)
 		bs := []byte("")
 		this.Send(0, &bs)
 	}
+	// close(this.outData)
+	this.net.CloseClient(this.GetName())
+	// fmt.Println("hold 协成走完")
 }
 
 //发送序列化后的数据
-func (this *Client) Send(msgID uint32, data *[]byte) {
+func (this *Client) Send(msgID uint32, data *[]byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err, _ = e.(error)
+			fmt.Println(err.Error())
+		}
+	}()
 	buff := MarshalPacket(msgID, data)
-	this.outData <- buff
+	// this.outData <- buff
+	_, err = this.conn.Write(*buff)
+	// if _, err = this.conn.Write(*msg); err != nil {
+	// 	log.Println("发送数据出错", err)
+	// 	return
+	// }
+	return
 }
 
 // func (this *Client) GetOneMsg() {
@@ -133,7 +153,7 @@ func NewClient(name, ip string, port int32) *Client {
 	client := new(Client)
 	client.name = name
 	client.inPack = make(chan *GetPacket, 1000)
-	client.outData = make(chan *[]byte, 1000)
+	// client.outData = make(chan *[]byte, 1000)
 	client.Connect(ip, port)
 	return client
 }

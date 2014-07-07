@@ -23,11 +23,11 @@ func (this *sessionBase) GetName() string {
 func (this *sessionBase) SetName(name string) {
 	this.name = name
 }
-func (this *sessionBase) Send(msgID uint32, data *[]byte) {}
-func (this *sessionBase) Close()                          {}
+func (this *sessionBase) Send(msgID uint32, data *[]byte) (err error) { return }
+func (this *sessionBase) Close()                                      {}
 
 type Session interface {
-	Send(msgID uint32, data *[]byte)
+	Send(msgID uint32, data *[]byte) error
 	Close()
 	Set(name string, value interface{})
 	Get(name string) interface{}

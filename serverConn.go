@@ -2,7 +2,6 @@ package messageEngine
 
 import (
 	"fmt"
-	"log"
 	"net"
 	// "time"
 )
@@ -14,14 +13,14 @@ type ServerConn struct {
 	Ip             string
 	Connected_time string
 	CloseTime      string
-	outData        chan *[]byte //序列化后的GetPacket
-	inPack         chan *GetPacket
-	isClose        bool //该连接是否已经关闭
+	// outData        chan *[]byte //序列化后的GetPacket
+	inPack  chan *GetPacket
+	isClose bool //该连接是否已经关闭
 }
 
 func (this *ServerConn) run() {
 	go this.recv()
-	go this.send()
+	// go this.send()
 	// go this.hold()
 }
 
@@ -31,6 +30,7 @@ func (this *ServerConn) recv() {
 	for !this.isClose {
 		packet, err, isClose := RecvPackage(this.conn)
 		if isClose {
+			this.isClose = true
 			break
 		}
 		if err == nil {
@@ -46,21 +46,21 @@ func (this *ServerConn) recv() {
 	}
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
-	close(this.outData)
+	// close(this.outData)
 	// fmt.Println("关闭连接")
 }
 
 //发送给客户端消息协程
-func (this *ServerConn) send() {
-	//处理客户端主动断开连接的情况
-	//确保消息发送完后再关闭连接
-	for msg := range this.outData {
-		if _, err := this.conn.Write(*msg); err != nil {
-			log.Println("发送数据出错", err)
-			return
-		}
-	}
-}
+// func (this *ServerConn) send() {
+// 	//处理客户端主动断开连接的情况
+// 	//确保消息发送完后再关闭连接
+// 	for msg := range this.outData {
+// 		if _, err := this.conn.Write(*msg); err != nil {
+// 			log.Println("发送数据出错", err)
+// 			return
+// 		}
+// 	}
+// }
 
 // //心跳连接
 // func (this *ServerConn) hold() {
@@ -72,9 +72,16 @@ func (this *ServerConn) send() {
 // }
 
 //给客户端发送数据
-func (this *ServerConn) Send(msgID uint32, data *[]byte) {
+func (this *ServerConn) Send(msgID uint32, data *[]byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err, _ = e.(error)
+		}
+	}()
 	buff := MarshalPacket(msgID, data)
-	this.outData <- buff
+	// this.outData <- buff
+	_, err = this.conn.Write(*buff)
+	return
 }
 
 //关闭这个连接
