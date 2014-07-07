@@ -35,10 +35,9 @@ func (this *Client) Connect(ip string, port int32) error {
 	}
 
 	//权限验证
-	err = defaultAuth.SendKey(this.conn, this, this.serverName)
+	this.serverName, err = defaultAuth.SendKey(this.conn, this, this.serverName)
 	if err != nil {
 		return err
-
 	}
 
 	fmt.Println("Connecting to", ip)
@@ -84,11 +83,14 @@ func (this *Client) recv() {
 	}
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
-	close(this.outData)
+	// close(this.outData)
 	// fmt.Println("关闭连接")
 }
 
 func (this *Client) send() {
+	defer func() {
+		close(this.outData)
+	}()
 	// //处理客户端主动断开连接的情况
 	for msg := range this.outData {
 		if _, err := this.conn.Write(*msg); err != nil {

@@ -63,7 +63,7 @@ type CustomAuth struct {
 }
 
 //发送
-func (this *CustomAuth) SendKey(conn net.Conn, session msgE.Session, name string) (err error) {
+func (this *CustomAuth) SendKey(conn net.Conn, session msgE.Session, name string) (string, error) {
 
 	lenght := int32(len(name))
 	buf := bytes.NewBuffer([]byte{})
@@ -71,7 +71,7 @@ func (this *CustomAuth) SendKey(conn net.Conn, session msgE.Session, name string
 
 	buf.Write([]byte(name))
 	conn.Write(buf.Bytes())
-	return
+	return name, nil
 }
 
 //接收
