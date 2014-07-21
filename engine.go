@@ -44,9 +44,9 @@ func (this *Engine) Listen(ip string, port int32) {
 //添加一个连接，给这个连接取一个名字，连接名字可以在自定义权限验证方法里面修改
 //@powerful    是否是强连接
 
-func (this *Engine) AddClientConn(name, ip string, port int32, powerful bool, call func()) {
+func (this *Engine) AddClientConn(name, ip string, port int32, powerful bool) {
 	this.run()
-	_, err := this.net.AddClientConn(name, ip, this.name, port, powerful, call)
+	_, err := this.net.AddClientConn(name, ip, this.name, port, powerful)
 	if err != nil {
 		fmt.Println("连接服务器失败")
 	}
@@ -62,11 +62,17 @@ func (this *Engine) GetController() Controller {
 	return this.controller
 }
 
+//设置自定义权限验证
 func (this *Engine) SetAuth(auth Auth) {
 	if auth == nil {
 		return
 	}
 	defaultAuth = auth
+}
+
+//设置关闭连接回调方法
+func (this *Engine) SetCloseCallback(call CloseCallback) {
+	this.net.closecallback = call
 }
 
 func (this *Engine) run() {

@@ -16,6 +16,7 @@ type ServerConn struct {
 	// outData        chan *[]byte //序列化后的GetPacket
 	inPack  chan *GetPacket
 	isClose bool //该连接是否已经关闭
+	net     *Net
 }
 
 func (this *ServerConn) run() {
@@ -44,6 +45,8 @@ func (this *ServerConn) recv() {
 		}
 		fmt.Println(err.Error())
 	}
+
+	this.net.CloseClient(this.GetName())
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
 	// close(this.outData)

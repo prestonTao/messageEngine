@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+type CloseCallback func(name string)
+
 //本机向其他服务器的连接
 type Client struct {
 	sessionBase
@@ -22,7 +24,7 @@ type Client struct {
 	isClose    bool            //该连接是否被关闭
 	isPowerful bool            //是否是强连接，强连接有短线重连功能
 	net        *Net
-	call       func()
+	// call       CloseCallback
 }
 
 func (this *Client) Connect(ip string, port int32) error {
@@ -46,7 +48,7 @@ func (this *Client) Connect(ip string, port int32) error {
 
 	go this.recv()
 	// go this.send()
-	go this.hold()
+	// go this.hold()
 	return nil
 }
 func (this *Client) reConnect() {
@@ -63,17 +65,16 @@ func (this *Client) reConnect() {
 
 		go this.recv()
 		// go this.send()
-		go this.hold()
+		// go this.hold()
 		return
 	}
 }
 
 func (this *Client) recv() {
-
 	for !this.isClose {
 		packet, err, isClose := RecvPackage(this.conn)
+
 		if isClose {
-			fmt.Println("remote is close")
 			this.isClose = true
 			break
 		}
@@ -84,10 +85,12 @@ func (this *Client) recv() {
 		}
 		fmt.Println(err.Error())
 	}
-	fmt.Println(this.call, this.isPowerful)
-	if this.call != nil {
-		this.call()
-	}
+	// fmt.Println(this.call, this.isPowerful)
+	// if this.call != nil {
+	// 	this.call(this.GetName())
+	// }
+
+	this.net.CloseClient(this.GetName())
 	if this.isPowerful {
 		go this.reConnect()
 	}
@@ -114,17 +117,17 @@ func (this *Client) recv() {
 // }
 
 //心跳连接
-func (this *Client) hold() {
-	for !this.isClose {
-		// fmt.Println("hold")
-		time.Sleep(time.Second * 2)
-		bs := []byte("")
-		this.Send(0, &bs)
-	}
-	// close(this.outData)
-	this.net.CloseClient(this.GetName())
-	fmt.Println("hold 协成走完")
-}
+// func (this *Client) hold() {
+// 	for !this.isClose {
+// 		// fmt.Println("hold")
+// 		time.Sleep(time.Second * 2)
+// 		bs := []byte("")
+// 		this.Send(0, &bs)
+// 	}
+// 	// close(this.outData)
+// 	this.net.CloseClient(this.GetName())
+// 	fmt.Println("hold 协成走完")
+// }
 
 //发送序列化后的数据
 func (this *Client) Send(msgID uint32, data *[]byte) (err error) {

@@ -8,8 +8,9 @@ import (
 )
 
 type Net struct {
-	Recv         chan *GetPacket //获得数据
-	sessionStore *sessionStore
+	Recv          chan *GetPacket //获得数据
+	sessionStore  *sessionStore
+	closecallback CloseCallback
 }
 
 func (this *Net) Listen(ip string, port int32) {
@@ -59,6 +60,7 @@ func (this *Net) newConnect(conn net.Conn) {
 		Connected_time: time.Now().String(),
 		// outData:        make(chan *[]byte, 1000),
 		inPack: this.Recv,
+		net:    this,
 	}
 	serverConn.name = name
 	serverConn.attrbutes = make(map[string]interface{})
@@ -89,6 +91,9 @@ func (this *Net) newConnect(conn net.Conn) {
 func (this *Net) CloseClient(name string) bool {
 	session, ok := this.sessionStore.getSession(name)
 	if ok {
+		if this.closecallback != nil {
+			this.closecallback(name)
+		}
 		this.sessionStore.removeSession(name)
 		session.Close()
 		return true
@@ -96,7 +101,7 @@ func (this *Net) CloseClient(name string) bool {
 	return false
 }
 
-func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful bool, call func()) (*Client, error) {
+func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful bool) (*Client, error) {
 	// this.lock.Lock()
 	// defer this.lock.Unlock()
 	//-------------------
@@ -110,7 +115,6 @@ func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful
 		inPack:     this.Recv,
 		net:        this,
 		isPowerful: powerful,
-		call:       call,
 	}
 	clientConn.name = name
 	clientConn.attrbutes = make(map[string]interface{})
