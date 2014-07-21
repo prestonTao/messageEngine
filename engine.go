@@ -42,9 +42,11 @@ func (this *Engine) Listen(ip string, port int32) {
 }
 
 //添加一个连接，给这个连接取一个名字，连接名字可以在自定义权限验证方法里面修改
-func (this *Engine) AddClientConn(name, ip string, port int32) {
+//@powerful    是否是强连接
+
+func (this *Engine) AddClientConn(name, ip string, port int32, powerful bool, call func()) {
 	this.run()
-	_, err := this.net.AddClientConn(name, ip, this.name, port)
+	_, err := this.net.AddClientConn(name, ip, this.name, port, powerful, call)
 	if err != nil {
 		fmt.Println("连接服务器失败")
 	}
@@ -79,6 +81,7 @@ func (this *Engine) run() {
 
 func (this *Engine) buildController() {
 	c := new(ControllerImpl)
+	c.lock = new(sync.RWMutex)
 	c.net = this.net
 	c.engine = this
 	c.attributes = make(map[string]interface{})
@@ -103,7 +106,7 @@ func (this *Engine) handler(msg *GetPacket) {
 		return
 	}
 	//这里决定了消息是否异步处理
-	go this.handlerProcess(handler, msg)
+	this.handlerProcess(handler, msg)
 }
 
 func (this *Engine) handlerProcess(handler MsgHandler, msg *GetPacket) {

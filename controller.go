@@ -1,11 +1,11 @@
 package messageEngine
 
 import (
-// "fmt"
-// "mandela/peerNode/messageEngine/net"
-// "common/message"
-// "github.com/ziutek/mymysql/mysql"
-// "sync"
+	// "fmt"
+	// "mandela/peerNode/messageEngine/net"
+	// "common/message"
+	// "github.com/ziutek/mymysql/mysql"
+	"sync"
 )
 
 type Controller interface {
@@ -23,7 +23,7 @@ type Controller interface {
 }
 
 type ControllerImpl struct {
-	// lock       sync.RWMutex
+	lock *sync.RWMutex
 	// Config     *ConfigFile
 	// ConnStore  map[int32]mysql.Conn
 	net        *Net
@@ -86,20 +86,26 @@ type ControllerImpl struct {
 
 //得到net模块，用于给用户发送消息
 func (this *ControllerImpl) GetNet() *Net {
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	return this.net
 }
 
 func (this *ControllerImpl) SetAttribute(name string, value interface{}) {
-	// this.lock.Lock()
-	// defer this.lock.Unlock()
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	this.attributes[name] = value
 }
 func (this *ControllerImpl) GetAttribute(name string) interface{} {
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	return this.attributes[name]
 }
 
 //
 func (this *ControllerImpl) GetSession(name string) (Session, bool) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	return this.net.GetSession(name)
 }
 

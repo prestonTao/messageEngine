@@ -22,6 +22,7 @@ type Client struct {
 	isClose    bool            //该连接是否被关闭
 	isPowerful bool            //是否是强连接，强连接有短线重连功能
 	net        *Net
+	call       func()
 }
 
 func (this *Client) Connect(ip string, port int32) error {
@@ -41,7 +42,7 @@ func (this *Client) Connect(ip string, port int32) error {
 		return err
 	}
 
-	fmt.Println("Connecting to", ip)
+	fmt.Println("Connecting to", ip, ":", strconv.Itoa(int(port)))
 
 	go this.recv()
 	// go this.send()
@@ -58,7 +59,7 @@ func (this *Client) reConnect() {
 			continue
 		}
 
-		fmt.Println("Connecting to", this.ip)
+		fmt.Println("Connecting to", this.ip, ":", strconv.Itoa(int(this.port)))
 
 		go this.recv()
 		// go this.send()
@@ -72,6 +73,7 @@ func (this *Client) recv() {
 	for !this.isClose {
 		packet, err, isClose := RecvPackage(this.conn)
 		if isClose {
+			fmt.Println("remote is close")
 			this.isClose = true
 			break
 		}
@@ -81,6 +83,13 @@ func (this *Client) recv() {
 			continue
 		}
 		fmt.Println(err.Error())
+	}
+	fmt.Println(this.call, this.isPowerful)
+	if this.call != nil {
+		this.call()
+	}
+	if this.isPowerful {
+		go this.reConnect()
 	}
 	//最后一个包接收了之后关闭chan
 	//如果有超时包需要等超时了才关闭，目前未做处理
@@ -114,7 +123,7 @@ func (this *Client) hold() {
 	}
 	// close(this.outData)
 	this.net.CloseClient(this.GetName())
-	// fmt.Println("hold 协成走完")
+	fmt.Println("hold 协成走完")
 }
 
 //发送序列化后的数据

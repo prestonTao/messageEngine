@@ -45,7 +45,7 @@ func client() {
 	engine.RegisterMsg(111, RecvMsg)
 	//设置自定义权限验证
 	engine.SetAuth(new(CustomAuth))
-	engine.AddClientConn("test", "127.0.0.1", 9090)
+	engine.AddClientConn("test", "127.0.0.1", 9090, false, nil)
 
 	//给服务器发送消息
 	session, _ := engine.GetController().GetSession("test")

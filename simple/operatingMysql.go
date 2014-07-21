@@ -62,7 +62,7 @@ type User struct {
 //---------------------------------------------
 func client() {
 	engine := msgE.NewEngine("interClient")
-	engine.AddClientConn("test", "127.0.0.1", 9090)
+	engine.AddClientConn("test", "127.0.0.1", 9090, false, nil)
 	session, _ := engine.GetController().GetSession("test")
 	hello := []byte("taopopo@126.com")
 	session.Send(111, &hello)

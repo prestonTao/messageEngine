@@ -59,7 +59,7 @@ func RecvMsg(c msgE.Controller, msg msgE.GetPacket) {
 func client() {
 	engine := msgE.NewEngine("interClient")
 	engine.RegisterMsg(111, RecvMsg)
-	engine.AddClientConn("test", "127.0.0.1", 9090)
+	engine.AddClientConn("test", "127.0.0.1", 9090, false, nil)
 
 	//给服务器发送消息
 	session, _ := engine.GetController().GetSession("test")
