@@ -116,14 +116,14 @@ func (this *Engine) handler(msg *GetPacket) {
 }
 
 func (this *Engine) handlerProcess(handler MsgHandler, msg *GetPacket) {
-	defer func() {
-		if err := recover(); err != nil {
-			e, ok := err.(error)
-			if ok {
-				fmt.Println(e.Error())
-			}
-		}
-	}()
+	// defer func() {
+	// 	if err := recover(); err != nil {
+	// 		e, ok := err.(error)
+	// 		if ok {
+	// 			fmt.Println("消息处理中心", e.Error())
+	// 		}
+	// 	}
+	// }()
 	//消息处理前先通过拦截器
 	itps := this.interceptor.getInterceptors()
 	itpsLen := len(itps)
@@ -136,8 +136,8 @@ func (this *Engine) handlerProcess(handler MsgHandler, msg *GetPacket) {
 	}
 	handler(this.controller, *msg)
 	//消息处理后也要通过拦截器
-	for i := itpsLen - 1; i >= 0; i-- {
-		itps[i].Out(this.controller, *msg)
+	for i := itpsLen; i > 0; i-- {
+		itps[i-1].Out(this.controller, *msg)
 	}
 }
 

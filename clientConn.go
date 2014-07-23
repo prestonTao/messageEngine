@@ -83,7 +83,7 @@ func (this *Client) recv() {
 			this.inPack <- packet
 			continue
 		}
-		fmt.Println(err.Error())
+		fmt.Println("接收数据出错  ", err.Error())
 	}
 	// fmt.Println(this.call, this.isPowerful)
 	// if this.call != nil {
@@ -134,7 +134,7 @@ func (this *Client) Send(msgID uint32, data *[]byte) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err, _ = e.(error)
-			fmt.Println(err.Error())
+			fmt.Println("发送序列化的数据出错  ", err.Error())
 		}
 	}()
 	buff := MarshalPacket(msgID, data)

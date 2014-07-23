@@ -43,7 +43,7 @@ func (this *ServerConn) recv() {
 			this.inPack <- packet
 			continue
 		}
-		fmt.Println(err.Error())
+		fmt.Println("接收数据出错  ", err.Error())
 	}
 
 	this.net.CloseClient(this.GetName())

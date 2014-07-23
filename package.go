@@ -24,6 +24,12 @@ type GetPacket struct {
 func RecvPackage(conn net.Conn) (packet *GetPacket, e error, isClose bool) {
 	var data []byte
 	header := make([]byte, 12)
+	if conn == nil {
+		// e = errors.New("")
+		fmt.Println("连接已经关闭")
+		isClose = true
+		return
+	}
 	n, err := io.ReadFull(conn, header)
 	if n == 0 && err == io.EOF {
 		// fmt.Println("客户端断开连接")
