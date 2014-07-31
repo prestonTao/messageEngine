@@ -101,13 +101,18 @@ func (this *Net) CloseClient(name string) bool {
 	return false
 }
 
-func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful bool) (*Client, error) {
+func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful bool) (Session, error) {
 	// this.lock.Lock()
 	// defer this.lock.Unlock()
 	//-------------------
 	//保证把原有的队列里的数据取出才能替换
 	//-------------------
 	// this.session++
+
+	session, ok := this.GetSession(name)
+	if ok {
+		return session, nil
+	}
 
 	clientConn := &Client{
 		serverName: serverName,
