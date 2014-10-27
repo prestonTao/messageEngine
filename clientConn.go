@@ -27,21 +27,20 @@ type Client struct {
 	// call       CloseCallback
 }
 
-func (this *Client) Connect(ip string, port int32) error {
+func (this *Client) Connect(ip string, port int32) (remoteName string, err error) {
 
 	this.ip = ip
 	this.port = port
 
-	var err error
 	this.conn, err = net.Dial("tcp", ip+":"+strconv.Itoa(int(port)))
 	if err != nil {
-		return err
+		return
 	}
 
 	//权限验证
-	this.serverName, err = defaultAuth.SendKey(this.conn, this, this.serverName)
+	remoteName, err = defaultAuth.SendKey(this.conn, this, this.serverName)
 	if err != nil {
-		return err
+		return
 	}
 
 	fmt.Println("Connecting to", ip, ":", strconv.Itoa(int(port)))
@@ -49,7 +48,7 @@ func (this *Client) Connect(ip string, port int32) error {
 	go this.recv()
 	// go this.send()
 	// go this.hold()
-	return nil
+	return
 }
 func (this *Client) reConnect() {
 	for {

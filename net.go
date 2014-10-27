@@ -9,6 +9,7 @@ import (
 
 type Net struct {
 	Recv          chan *GetPacket //获得数据
+	Name          string          //本机名称
 	sessionStore  *sessionStore
 	closecallback CloseCallback
 }
@@ -42,7 +43,7 @@ func (this *Net) listener(listener net.Listener) {
 
 //创建一个新的连接
 func (this *Net) newConnect(conn net.Conn) {
-	name, err := defaultAuth.RecvKey(conn)
+	remoteName, err := defaultAuth.RecvKey(conn, this.Name)
 	if err != nil {
 		return
 	}
@@ -62,7 +63,7 @@ func (this *Net) newConnect(conn net.Conn) {
 		inPack: this.Recv,
 		net:    this,
 	}
-	serverConn.name = name
+	serverConn.name = remoteName
 	serverConn.attrbutes = make(map[string]interface{})
 	serverConn.run()
 
@@ -74,7 +75,7 @@ func (this *Net) newConnect(conn net.Conn) {
 	// client.outData = make(chan *[]byte, 1000)
 	// client.inPack = this.Recv
 	// client.run()
-	this.sessionStore.addSession(name, serverConn)
+	this.sessionStore.addSession(remoteName, serverConn)
 	// addConn(this.session, serverConn)
 
 	fmt.Println(time.Now().String(), "建立连接", conn.RemoteAddr().String())
@@ -101,7 +102,8 @@ func (this *Net) CloseClient(name string) bool {
 	return false
 }
 
-func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful bool) (Session, error) {
+//@serverName   给客户端发送的自己的名字
+func (this *Net) AddClientConn(ip, serverName string, port int32, powerful bool) (Session, error) {
 	// this.lock.Lock()
 	// defer this.lock.Unlock()
 	//-------------------
@@ -109,10 +111,10 @@ func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful
 	//-------------------
 	// this.session++
 
-	session, ok := this.GetSession(name)
-	if ok {
-		return session, nil
-	}
+	// session, ok := this.GetSession(name)
+	// if ok {
+	// 	return session, nil
+	// }
 
 	clientConn := &Client{
 		serverName: serverName,
@@ -121,11 +123,12 @@ func (this *Net) AddClientConn(name, ip, serverName string, port int32, powerful
 		net:        this,
 		isPowerful: powerful,
 	}
-	clientConn.name = name
+	// clientConn.name = name
 	clientConn.attrbutes = make(map[string]interface{})
-	err := clientConn.Connect(ip, port)
+	remoteName, err := clientConn.Connect(ip, port)
 	if err == nil {
-		this.sessionStore.addSession(name, clientConn)
+		clientConn.name = remoteName
+		this.sessionStore.addSession(remoteName, clientConn)
 		return clientConn, nil
 	}
 	return nil, err
@@ -146,9 +149,11 @@ func (this *Net) Send(name string, msgID uint32, data []byte) bool {
 	}
 }
 
-func NewNet() *Net {
+//@name   本服务器名称
+func NewNet(name string) *Net {
 
 	net := new(Net)
+	net.Name = name
 	net.sessionStore = NewSessionStore()
 	net.Recv = make(chan *GetPacket, 5000)
 	// net.start(ip, port)

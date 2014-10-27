@@ -42,14 +42,22 @@ func (this *Engine) Listen(ip string, port int32) {
 }
 
 //添加一个连接，给这个连接取一个名字，连接名字可以在自定义权限验证方法里面修改
-//@powerful    是否是强连接
-
-func (this *Engine) AddClientConn(name, ip string, port int32, powerful bool) {
+//@powerful      是否是强连接
+//@return  name  对方的名称
+func (this *Engine) AddClientConn(ip string, port int32, powerful bool) (name string) {
 	this.run()
-	_, err := this.net.AddClientConn(name, ip, this.name, port, powerful)
+	session, err := this.net.AddClientConn(ip, this.name, port, powerful)
 	if err != nil {
 		fmt.Println("连接服务器失败")
+		return ""
 	}
+	name = session.GetName()
+	return
+}
+
+//给一个session绑定另一个名称
+func (this *Engine) LinkName(name string, session Session) {
+
 }
 
 //添加一个拦截器，所有消息到达业务方法之前都要经过拦截器处理
@@ -141,12 +149,13 @@ func (this *Engine) handlerProcess(handler MsgHandler, msg *GetPacket) {
 	}
 }
 
+//@name   本服务器名称
 func NewEngine(name string) *Engine {
 	engine := new(Engine)
 	engine.name = name
 	engine.interceptor = NewInterceptor()
 	engine.onceRead = new(sync.Once)
-	engine.net = NewNet()
+	engine.net = NewNet(name)
 	engine.router = NewRouter()
 	return engine
 }
